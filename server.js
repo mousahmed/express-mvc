@@ -1,55 +1,33 @@
 const express = require("express");
+const path = require("path");
+
+const friendsRouter = require("./routes/friends.router");
+const messagesRouter = require("./routes/messages.router");
 
 const app = express();
-
+app.set("view engine", "hbs");
+app.set("views", path.join(__dirname, "views"));
 const PORT = 3000;
 
-const friends = [
-	{
-		id: 0,
-		name: "Albert Einstein",
-	},
-	{
-		id: 1,
-		name: "Sir Isaac Newton",
-	},
-];
-
 app.use((req, res, next) => {
+	const start = Date.now();
 	console.log(`${req.method} ${req.url}`);
 	next();
+	const delta = Date.now() - start;
+	console.log(`${req.method} ${req.url} ${delta}ms`);
 });
-app.get("/friends", (req, res) => {
-	res.json(friends);
-});
+app.use("/site", express.static(path.join(__dirname, "public")));
+app.use(express.json());
 
-app.get("/friends/:friendId", (req, res) => {
-	const friendId = Number(req.params.friendId);
-
-	const friend = friends[friendId];
-	if (friend) {
-		res.status(200).json(friend);
-	} else {
-		res.status(404).json({
-			error: "Friend does not exist",
-		});
-	}
+app.get("/", (req, res) => {
+	res.render("index", {
+		title: "My friends are very clever",
+		caption: "Let's got skiing!",
+	});
 });
+app.use("/friends", friendsRouter);
+app.use("/messages", messagesRouter);
 
-app.get("/message", (req, res) => {
-	res.send(`
-		<ul>
-		<li>
-			Hello, world
-		</li>
-		<li>Welcome</li>
-		</ul>
-	`);
-});
-
-app.post("/message", (req, res) => {
-	console.log("Updating message...");
-});
 app.listen(PORT, () => {
 	console.log(`listing on port ${PORT}`);
 });
